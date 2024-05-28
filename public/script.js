@@ -1,12 +1,3 @@
-//10
-/**
- * This is an example of a basic node.js script that performs
- * the Authorization Code with PKCE oAuth2 flow to authenticate 
- * against the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
- */
 const clientId = 'ae92d6a5af594310b5a621552b4410ce'; // your clientId
 const redirectUrl = 'http://localhost:8080';        // your redirect URL - must be localhost URL and/or HTTPS
 
