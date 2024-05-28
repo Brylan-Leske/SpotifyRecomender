@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Spotify Recommendations</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header id="topbar">
+        <div class="profile">
+            <img src="Portrait_Placeholder.png" alt="Profile Picture" id="profile-picture">
+            <span id="profile-name">User Name</span>
+        </div>
+        <button id="logout-button" onclick="logoutClick();">Log out</button>
+    </header>
+    <div id="main"></div>
+    <div id="created-playlist" style="display: none;">
+        <h3>Created Playlist</h3>
+
+        <table id="playlist-table">
+            <tbody>
+            </tbody>
+        </table>
+        <button class="primary-button" onclick="addPlaylistToLibrary()">Add to Spotify library</button>
+    </div>
+    <div id="oauth"></div>
+
+    <template id="login">
+        <h2>Welcome!</h2>
+        <p>Log connect with spotify to create recomended playlists based off of specific artists, tracks, or genres!
+        </p>
+        <button id="login-button" data-bind-onclick="loginWithSpotifyClick();" class="primary-button">Log in with
+            Spotify</button>
+    </template>
+
+    <template id="logged-in-template">
+
+        <section id="playlist-creator">
+            <h2>Create Your Recommended Playlist</h2>
+            <div class="form-group">
+                <label for="artist-input">Artist</label>
+                <input type="text" id="artist-input" name="artist" value="33yje3hgpNfdXpqdJQcrt9">
+            </div>
+            <div class="form-group">
+                <label for="song-input">Song</label>
+                <input type="text" id="song-input" name="song" value="2VO8CVuLDVXynM8tQECALM">
+            </div>
+            <div class="form-group">
+                <label for="genre-input">Genre</label>
+                <input type="text" id="genre-input" name="genre" value="shoegaze">
+            </div>
+            <div class="form-group">
+                <label for="number-input">Number of Recommendations</label>
+                <input type="number" value="10" id="number-input" name="number" min="1" max="100" step="1"
+                    oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1').replace(/^0[^.]/, '0');" />
+            </div>
+            <button id="create-playlist-button" class="primary-button">Create Playlist</button>
+        </section>
+
+        <!-- <button id="refresh-token-button" data-bind-onclick="refreshTokenClick();">Refresh Token</button> -->
+    </template>
+
+    <template id="oauth-template">
+        <h2>oAuth info</h2>
+        <table>
+            <tr>
+                <td>Access token</td>
+                <td data-bind="access_token"></td>
+            </tr>
+            <tr>
+                <td>Refresh token</td>
+                <td data-bind="refresh_token"></td>
+            </tr>
+            <tr>
+                <td>Expiration at</td>
+                <td data-bind="expires">${getExpirationDate(expires_in)}</td>
+            </tr>
+        </table>
+    </template>
+
+    <section id="playlist-creator" style="display: none;">
+        <h2>Create Your Recommended Playlist</h2>
+        <div class="form-group">
+            <label for="artist-input">Artist</label>
+            <input type="text" id="artist-input" name="artist">
+        </div>
+        <div class="form-group">
+            <label for="song-input">Song</label>
+            <input type="text" id="song-input" name="song">
+        </div>
+        <div class="form-group">
+            <label for="genre-input">Genre</label>
+            <input type="text" id="genre-input" name="genre">
+        </div>
+        <div class="form-group">
+            <label for="number-input">Number of Recommendations</label>
+            <input type="number" value="10" id="number-input" name="number" min="1" max="100" step="1"
+                oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1').replace(/^0[^.]/, '0');" />
+        </div>
+        <button id="create-playlist-button" class="primary-button">Create Playlist</button>
+    </section>
+
+    <a id="credits" href="https://github.com/Brylan-Leske/SpotifyRecomender/" target="_blank"
+        rel="noopener noreferrer">Spotify Recommender created by Brylan
+        Leske</a>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
