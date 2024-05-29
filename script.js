@@ -44,6 +44,9 @@ async function initialize() {
     }
 
     if (currentToken.access_token) {
+
+        checkTokenExpiration()
+
         const userData = await getUserData();
         gottenUserData = userData
         renderTemplate("main", "logged-in-template", userData);
@@ -99,6 +102,15 @@ async function initialize() {
 }
 
 initialize()
+
+function checkTokenExpiration() {
+    const expires = new Date(currentToken.expires);
+    const now = new Date();
+
+    if (now >= expires) {
+        logoutClick();
+    }
+}
 
 async function redirectToSpotifyAuthorize() {
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
