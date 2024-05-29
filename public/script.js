@@ -1,4 +1,4 @@
-const clientId = 'ae92d6a5af594310b5a621552b4410ce'; // your clientId
+const clientId = 'client-id-goes-here'; // your clientId
 const redirectUrl = 'http://localhost:8080';        // your redirect URL - must be localhost URL and/or HTTPS
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
@@ -44,6 +44,9 @@ async function initialize() {
     }
 
     if (currentToken.access_token) {
+
+        checkTokenExpiration()
+
         const userData = await getUserData();
         gottenUserData = userData
         renderTemplate("main", "logged-in-template", userData);
@@ -99,6 +102,15 @@ async function initialize() {
 }
 
 initialize()
+
+function checkTokenExpiration() {
+    const expires = new Date(currentToken.expires);
+    const now = new Date();
+
+    if (now >= expires) {
+        logoutClick();
+    }
+}
 
 async function redirectToSpotifyAuthorize() {
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
