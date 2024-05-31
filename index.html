@@ -44,22 +44,51 @@
 
         <section id="playlist-creator">
             <h2>Create Your Recommended Playlist</h2>
+            <hr class="hr-dim">
+            <p>Generate recommendations by combining up to five search paramaters including artists, tracks, and genres.
+            </p>
             <div class="form-group">
-                <label for="artist-input">Artist</label>
-                <input type="text" id="artist-input" name="artist" value="33yje3hgpNfdXpqdJQcrt9">
+                <label for="artists-input">Artists</label>
+                <div class="input-categories" id="artists-input-container">
+                    <ul>
+                    </ul>
+                    <input type="text" id="artists-input" name="artist" placeholder="Search for artists"
+                        oninput="debouncedSearchItems('artists')" />
+                </div>
+                <div id="artistsSearchResult" class="search-result-dropdown" style="display: none">
+                </div>
             </div>
+
             <div class="form-group">
-                <label for="song-input">Song</label>
-                <input type="text" id="song-input" name="song" value="2VO8CVuLDVXynM8tQECALM">
+                <label for="tracks-input">Songs</label>
+                <div class="input-categories" id="tracks-input-container">
+                    <ul>
+                    </ul>
+                    <input type="text" id="tracks-input" name="tracks" placeholder="Search for tracks"
+                        oninput="debouncedSearchItems('tracks')" />
+                </div>
+                <div id="tracksSearchResult" class="search-result-dropdown" style="display: none">
+
+                </div>
             </div>
+
             <div class="form-group">
-                <label for="genre-input">Genre</label>
-                <input type="text" id="genre-input" name="genre" value="shoegaze">
+                <label for="genres-input">Songs</label>
+                <div class="input-categories" id="genres-input-container">
+                    <ul>
+                    </ul>
+                    <input type="text" id="genres-input" name="genres" placeholder="Search for genres"
+                        oninput="searchItems('genres')" />
+                </div>
+                <div id="genresSearchResult" class="search-result-dropdown" style="display: none">
+
+                </div>
             </div>
+
             <div class="form-group">
                 <label for="number-input">Number of Recommendations</label>
-                <input type="number" value="10" id="number-input" name="number" min="1" max="100" step="1"
-                    oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1').replace(/^0[^.]/, '0');" />
+                <input type="number" inputmode="numeric" placeholder="1-100" id="number-input" name="number" min="1"
+                    max="100" step="1" oninput="this.value = this.value.replace(/\D+/g, '')" />
             </div>
             <button id="create-playlist-button" class="primary-button">Create Playlist</button>
         </section>
@@ -107,11 +136,16 @@
         <button id="create-playlist-button" class="primary-button">Create Playlist</button>
     </section>
 
-    <a id="credits" href="https://github.com/Brylan-Leske/SpotifyRecomender/" target="_blank"
-        rel="noopener noreferrer">Spotify Recommender created by Brylan
-        Leske</a>
+    <div id="credits">
+        <a id="credits-text" href="https://github.com/Brylan-Leske/SpotifyRecomender/" target="_blank"
+            rel="noopener noreferrer">Spotify
+            Recommender created by Brylan
+            Leske</a>
+    </div>
+
 
     <script src="script.js"></script>
+    <!-- <script>renderTemplate("main", "logged-in-template", {});</script> -->
 </body>
 
 </html>
