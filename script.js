@@ -1,10 +1,17 @@
+//25
 const clientId = 'ae92d6a5af594310b5a621552b4410ce'; // your clientId
-const redirectUrl = 'https://brylan-leske.github.io/SpotifyRecomender/';        // your redirect URL - must be localhost URL and/or HTTPS
+const redirectUrl = 'http://localhost:8080';        // your redirect URL - must be localhost URL and/or HTTPS
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
 const tokenEndpoint = "https://accounts.spotify.com/api/token";
 const scope = 'user-read-private playlist-modify-public playlist-modify-private';
 
+const recommendationParameters = {
+    artists: [],
+    tracks: [],
+    genres: [],
+    limit: 10
+};
 var recentlyRecommended = {};
 var gottenUserData = {};
 
@@ -62,15 +69,12 @@ async function initialize() {
         topbar.style.display = "flex";
 
         document.getElementById('create-playlist-button').addEventListener('click', function () {
-            const artistInput = document.getElementById('artist-input').value.split(',').map(item => item.trim()).filter(Boolean);
-            const songInput = document.getElementById('song-input').value.split(',').map(item => item.trim()).filter(Boolean);
-            const genreInput = document.getElementById('genre-input').value.split(',').map(item => item.trim()).filter(Boolean);
             const numberInput = document.getElementById('number-input').value;
 
-            const totalItems = artistInput.length + songInput.length + genreInput.length;
+            const totalItems = recommendationParameters.artists.length + recommendationParameters.tracks.length + recommendationParameters.genres.length;
 
             if (totalItems < 1 || totalItems > 5) {
-                alert('Please provide a total of 1 to 5 items across artists, songs, and genres.');
+                alert('Please provide a minimum of 1 and a maximum of 5 items across artists, tracks, and genres.');
                 return;
             }
 
@@ -79,14 +83,9 @@ async function initialize() {
                 return;
             }
 
-            const table = {
-                artists: artistInput,
-                songs: songInput,
-                genres: genreInput,
-                limit: parseInt(numberInput, 10)
-            };
+            recommendationParameters.limit = parseInt(numberInput, 10)
 
-            processRecommendations(table);
+            processRecommendations(recommendationParameters);
 
 
         });
@@ -256,10 +255,10 @@ async function processRecommendations(parameters) {
 }
 
 async function getRecommendations(parameters) {
-    const { artists, songs, genres, limit } = parameters;
+    const { artists, tracks, genres, limit } = parameters;
 
     const seedArtists = artists.join(',');
-    const seedTracks = songs.join(',');
+    const seedTracks = tracks.join(',');
     const seedGenres = genres.join(',');
 
     const url = new URL('https://api.spotify.com/v1/recommendations');
@@ -356,6 +355,26 @@ async function refreshTokenClick() {
     // renderTemplate("oauth", "oauth-template", currentToken);
 }
 
+
+var availableGenres = []
+
+async function getAvailableGenres() {
+    if (availableGenres.length == 0) { // Change "availableGenres" here
+        const response = await fetch("https://api.spotify.com/v1/recommendations/available-genre-seeds", {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
+        });
+        const data = await response.json()
+
+        availableGenres = data.genres;
+        return availableGenres;
+    } else {
+        return availableGenres;
+    }
+}
+
+
+
 // HTML Template Rendering with basic data binding - demoware only.
 function renderTemplate(targetId, templateId, data = null) {
     const template = document.getElementById(templateId);
@@ -386,4 +405,189 @@ function renderTemplate(targetId, templateId, data = null) {
     const target = document.getElementById(targetId);
     target.innerHTML = "";
     target.appendChild(clone);
+}
+
+async function searchArtists(keyword) {
+    const response = await fetch("https://api.spotify.com/v1/search?q=" + encodeURIComponent(keyword) + "&type=artist&limit=5", {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
+    });
+
+    const data = await response.json();
+
+    var newTable = [];
+
+    data.artists.items.forEach((artist) => {
+        var artistTable = {}
+        artistTable.id = artist.id
+        artistTable.name = artist.name
+        newTable.push(artistTable)
+    })
+
+
+    return newTable;
+}
+
+async function searchTracks(keyword) {
+    const response = await fetch("https://api.spotify.com/v1/search?q=" + encodeURIComponent(keyword) + "&type=track&limit=5", {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
+    });
+
+    const data = await response.json();
+
+    var newTable = [];
+
+    data.tracks.items.forEach((track) => {
+        var trackTable = {}
+        trackTable.id = track.id
+        trackTable.name = track.name + ' - ' + track.artists[0].name
+        newTable.push(trackTable)
+    })
+
+
+    return newTable;
+}
+
+async function searchGenres(keyword) {
+    const genres = await getAvailableGenres();
+    const keywordLowerCase = keyword.toLowerCase();
+
+    // Filter genres that exactly match the keyword
+    const exactMatch = genres.find(genre => genre.toLowerCase() === keywordLowerCase);
+    const filteredGenres = genres.filter(genre => genre.toLowerCase().includes(keywordLowerCase));
+
+    // Sort filtered genres based on how closely they match the keyword
+    filteredGenres.sort((a, b) => {
+        const indexOfA = a.toLowerCase().indexOf(keywordLowerCase);
+        const indexOfB = b.toLowerCase().indexOf(keywordLowerCase);
+        return indexOfA - indexOfB;
+    });
+
+    // Include the exact match and the top 3 closest matches (excluding the exact match)
+    const result = [];
+    if (exactMatch) {
+        result.push({
+            id: exactMatch,
+            name: exactMatch.toLowerCase().split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        });
+    }
+    const closestMatches = filteredGenres.slice(0, Math.min(3, filteredGenres.length));
+    closestMatches.forEach(genre => {
+        result.push({
+            id: genre,
+            name: genre.toLowerCase().split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        });
+    });
+
+    result.push({
+        id: keyword.toLowerCase().replace(/\s/g, '-'),
+        name: keyword
+    })
+
+    return result;
+}
+
+
+
+// Array to store selected items
+
+
+async function addSelectedItem(type, itemId, itemName, event) {
+    event.preventDefault(); // Prevent the default behavior of the link
+
+    // Add item ID to the recommendationParameters array for the given type
+    recommendationParameters[type].push(itemId);
+
+    // Add item name as a tag
+    addTagToContainer(type, itemName);
+
+    // Clear the search bar text
+    document.getElementById(`${type}-input`).value = '';
+
+    // Hide search results
+    document.getElementById(`${type}SearchResult`).style.display = "none";
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            func.apply(context, args);
+        }, wait);
+    };
+}
+
+// Use debounce for searchItems function
+const debouncedSearchItems = debounce(searchItems, 500); // 500 milliseconds debounce time
+
+
+async function searchItems(type) {
+    const input = document.getElementById(`${type}-input`);
+    const filter = input.value;
+
+    if (filter.length === 0) {
+        document.getElementById(`${type}SearchResult`).style.display = "none";
+        document.getElementById(`${type}-input-container`).classList.remove('input-categories-open');
+        return;
+    }
+
+    let results = [];
+    switch (type) {
+        case 'artists':
+            results = await searchArtists(filter);
+            break;
+        case 'tracks':
+            results = await searchTracks(filter);
+            break;
+        case 'genres':
+            results = await searchGenres(filter);
+            break;
+        default:
+            break;
+    }
+
+    const resultContainer = document.getElementById(`${type}SearchResult`);
+    resultContainer.style.width = (document.getElementById(`${type}-input-container`).offsetWidth - 20) + 'px'
+
+    document.getElementById(`${type}-input-container`).classList.add('input-categories-open');
+
+
+    resultContainer.innerHTML = ''; // Clear previous results
+
+    results.forEach(item => {
+        const itemElement = document.createElement('a');
+        itemElement.className = `${type}-search-result`;
+        itemElement.textContent = item.name;
+        itemElement.href = ''; // Prevent default link behavior
+        itemElement.dataset.id = item.id; // Store the item ID in a data attribute
+        itemElement.onclick = (event) => addSelectedItem(type, item.id, item.name, event);
+        resultContainer.appendChild(itemElement);
+    });
+
+    resultContainer.style.display = results.length ? "block" : "none";
+
+    if (results.length === 0) {
+        document.getElementById(`${type}-input-container`).classList.remove('input-categories-open');
+    }
+}
+
+function addTagToContainer(type, itemName) {
+    const container = document.getElementById(`${type}-input-container`);
+    const newTag = document.createElement('li');
+    newTag.innerHTML = itemName;
+    // Add click event listener to remove the tag when clicked
+    newTag.addEventListener('click', function () {
+        // Remove item ID from the recommendationParameters array for the given type
+        const itemId = this.dataset.id;
+        const index = recommendationParameters[type].indexOf(itemId);
+        if (index > -1) {
+            recommendationParameters[type].splice(index, 1);
+        }
+        // Remove the tag from the container
+        this.parentNode.removeChild(this);
+    });
+    container.querySelector('ul').appendChild(newTag);
 }
