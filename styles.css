@@ -365,3 +365,23 @@ h3 {
     background-color: #404040;
     color: white;
 }
+
+.text-button {
+    font-family: "Nunito", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #ffffff;
+    text-decoration: underline;
+    font-size: 14px;
+
+    background: none;
+    border: none;
+    margin: 10px 10px 10px 0px;
+    padding: 5px 5px 5px 0px;
+}
+
+.tip {
+    font-size: x-small;
+    text-align: left;
+    margin: 3px;
+    padding: 0px;
+}
