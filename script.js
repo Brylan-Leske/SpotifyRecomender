@@ -69,7 +69,7 @@ async function initialize() {
         topbar.style.display = "flex";
 
         document.getElementById('create-playlist-button').addEventListener('click', function () {
-            const numberInput = document.getElementById('number-input').value;
+            const limitInput = document.getElementById('limit-input').value;
 
             const totalItems = recommendationParameters.artists.length + recommendationParameters.tracks.length + recommendationParameters.genres.length;
 
@@ -78,13 +78,41 @@ async function initialize() {
                 return;
             }
 
-            if (!numberInput || numberInput < 1 || numberInput > 100) {
+            if (!limitInput || limitInput < 1 || limitInput > 100) {
                 alert('Please provide a number of recommendations between 1 and 100.');
                 return;
             }
 
-            recommendationParameters.limit = parseInt(numberInput, 10)
+            recommendationParameters.limit = parseInt(limitInput, 10)
 
+
+            const durationInput = document.getElementById('duration-input').value;
+            const popularityInput = document.getElementById('popularity-input').value;
+
+            if (durationInput !== null && durationInput !== '' && durationInput != 0) {
+                if (durationInput > 0 && durationInput <= 54000) {
+                    recommendationParameters.duration = parseInt(durationInput, 10) * 1000;
+                } else {
+                    alert('Duration must be between 0 and 54,000 seconds.');
+                    return;
+                }
+            } else {
+                delete recommendationParameters.duration;
+            }
+
+            if (popularityInput !== null && popularityInput !== '' && popularityInput != 0) {
+                if (popularityInput > 0 && popularityInput <= 100) {
+                    recommendationParameters.popularity = parseInt(popularityInput, 10);
+                } else {
+                    alert('Popularity must be between 0 and 100.');
+                    return;
+                }
+            } else {
+                delete recommendationParameters.popularity;
+            }
+
+
+            console.log(recommendationParameters)
             processRecommendations(recommendationParameters);
 
 
@@ -255,7 +283,7 @@ async function processRecommendations(parameters) {
 }
 
 async function getRecommendations(parameters) {
-    const { artists, tracks, genres, limit } = parameters;
+    const { artists, tracks, genres, limit, duration, popularity } = parameters;
 
     const seedArtists = artists.join(',');
     const seedTracks = tracks.join(',');
@@ -268,6 +296,14 @@ async function getRecommendations(parameters) {
         seed_tracks: seedTracks,
         seed_genres: seedGenres
     };
+
+    // Include duration and popularity if they are present
+    if (duration) {
+        params.target_duration_ms = duration;
+    }
+    if (popularity) {
+        params.target_popularity = popularity;
+    }
 
     Object.keys(params).forEach(key => {
         if (params[key]) {
@@ -282,7 +318,6 @@ async function getRecommendations(parameters) {
 
     const data = await response.json();
 
-
     if (!data || !data.tracks) {
         throw new Error('Failed to fetch recommendations');
     }
@@ -290,9 +325,10 @@ async function getRecommendations(parameters) {
     return data;
 }
 
+
 async function createPlaylist() {
-    const nameString = "New Playlist";
-    const descriptionString = toString("Playlist created by Spotify Recommendation Engine. Created on " + toString(Date.now.toString));
+    const nameString = "Recommended Playlist";
+    const descriptionString = "Playlist created by Spotify Recommendation Engine. https://brylan-leske.github.io/SpotifyRecomender/";
 
     const response = await fetch("https://api.spotify.com/v1/users/" + gottenUserData.id + "/playlists", {
         method: 'POST',
@@ -302,11 +338,11 @@ async function createPlaylist() {
         },
         body: JSON.stringify(
             {
-                "name": nameString,
-                "description": descriptionString,
+                "name": "Recommended Playlist",
+                "description": "Playlist created by Spotify Recommendation Engine. https://brylan-leske.github.io/SpotifyRecomender/",
                 "public": false
-            }
-        )
+            })
+
     });
 
     return await response.json();
@@ -590,4 +626,14 @@ function addTagToContainer(type, itemName) {
         this.parentNode.removeChild(this);
     });
     container.querySelector('ul').appendChild(newTag);
+}
+
+function toggleAdvancedOptionsDiv() {
+    console.log(1)
+    var advancedOptionsSelector = document.getElementById('advanced-options-selector')
+    if (advancedOptionsSelector.style.display == 'none') {
+        advancedOptionsSelector.style.display = 'block'
+    } else {
+        advancedOptionsSelector.style.display = 'none'
+    }
 }
