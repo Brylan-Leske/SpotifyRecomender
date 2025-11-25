@@ -1,5 +1,5 @@
-//27
-const clientId = 'ae92d6a5af594310b5a621552b4410ce'; // your clientId
+//28 (include version 28 in commit)
+const clientId = 'b784800f3f0f48fb92ec12ea64cf7561'; // your clientId
 const redirectUrl = 'https://brylan-leske.github.io/SpotifyRecomender/';        // your redirect URL - must be localhost URL and/or HTTPS
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
