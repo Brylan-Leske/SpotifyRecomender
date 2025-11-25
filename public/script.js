@@ -3,7 +3,7 @@ const redirectUrl = 'http://localhost:8080';        // your redirect URL - must 
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
 const tokenEndpoint = "https://accounts.spotify.com/api/token";
-const scope = 'user-read-private playlist-modify-public playlist-modify-private';
+const scope = 'user-read-private playlist-modify-public playlist-modify-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
 const recommendationParameters = {
     artists: [],
@@ -56,6 +56,9 @@ async function initialize() {
         const userData = await getUserData();
         gottenUserData = userData
         renderTemplate("main", "logged-in-template", userData);
+
+        // Initialize player widget
+        initializePlayerWidget();
         // renderTemplate("oauth", "oauth-template", currentToken);
 
         const profileImage = document.getElementById("profile-picture");
@@ -392,6 +395,8 @@ async function refreshTokenClick() {
 
 
 var availableGenres = []
+var playerUpdateInterval = null;
+var currentPlaybackState = null;
 
 async function getAvailableGenres() {
     if (availableGenres.length == 0) { // Change "availableGenres" here
@@ -635,4 +640,172 @@ function toggleAdvancedOptionsDiv() {
     } else {
         advancedOptionsSelector.style.display = 'none'
     }
+}
+
+// Spotify Player Widget Functions
+async function getCurrentPlayback() {
+    try {
+        const response = await fetch("https://api.spotify.com/v1/me/player", {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
+        });
+
+        if (response.status === 204 || response.status === 404) {
+            return null; // No active playback
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching playback state:', error);
+        return null;
+    }
+}
+
+async function togglePlayPause() {
+    try {
+        const playbackState = await getCurrentPlayback();
+
+        if (!playbackState) {
+            alert('No active playback device found. Please start playing music on Spotify.');
+            return;
+        }
+
+        const endpoint = playbackState.is_playing
+            ? "https://api.spotify.com/v1/me/player/pause"
+            : "https://api.spotify.com/v1/me/player/play";
+
+        await fetch(endpoint, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
+        });
+
+        // Update UI immediately
+        setTimeout(() => updatePlayerWidget(), 500);
+    } catch (error) {
+        console.error('Error toggling play/pause:', error);
+    }
+}
+
+async function addCurrentTrackToRecommendations() {
+    const playbackState = await getCurrentPlayback();
+
+    if (!playbackState || !playbackState.item) {
+        alert('No track currently playing');
+        return;
+    }
+
+    const track = playbackState.item;
+    const trackId = track.id;
+    const trackName = track.name + ' - ' + track.artists[0].name;
+
+    // Check if already added
+    if (recommendationParameters.tracks.includes(trackId)) {
+        alert('This track is already in your recommendations');
+        return;
+    }
+
+    // Add to recommendations
+    recommendationParameters.tracks.push(trackId);
+    addTagToContainer('tracks', trackName);
+
+    alert('Added "' + track.name + '" to recommendations!');
+}
+
+async function playGeneratedPlaylist() {
+    if (!recentlyRecommended || !recentlyRecommended.tracks || recentlyRecommended.tracks.length === 0) {
+        alert('No playlist generated yet. Create a playlist first!');
+        return;
+    }
+
+    try {
+        const uris = recentlyRecommended.tracks.map(track => track.uri);
+
+        const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + currentToken.access_token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                uris: uris
+            })
+        });
+
+        if (response.status === 404) {
+            alert('No active playback device found. Please open Spotify on a device first.');
+            return;
+        }
+
+        if (response.ok || response.status === 204) {
+            setTimeout(() => updatePlayerWidget(), 1000);
+        }
+    } catch (error) {
+        console.error('Error playing playlist:', error);
+        alert('Error playing playlist. Make sure Spotify is open on a device.');
+    }
+}
+
+function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+}
+
+async function updatePlayerWidget() {
+    const playbackState = await getCurrentPlayback();
+    const widget = document.getElementById('spotify-player-widget');
+
+    if (!playbackState || !playbackState.item) {
+        widget.style.display = 'none';
+        return;
+    }
+
+    currentPlaybackState = playbackState;
+    widget.style.display = 'flex';
+
+    const track = playbackState.item;
+
+    // Update album art
+    document.getElementById('player-album-art').src = track.album.images[0]?.url || 'Portrait_Placeholder.png';
+
+    // Update track info
+    document.getElementById('player-track-title').textContent = track.name;
+    document.getElementById('player-artist-name').textContent = track.artists.map(a => a.name).join(', ');
+
+    // Update progress bar
+    const progress = (playbackState.progress_ms / track.duration_ms) * 100;
+    document.getElementById('player-progress-bar').style.width = progress + '%';
+
+    // Update time info
+    document.getElementById('player-current-time').textContent = formatTime(playbackState.progress_ms);
+    document.getElementById('player-total-time').textContent = formatTime(track.duration_ms);
+
+    // Update play/pause button
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    if (playbackState.is_playing) {
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+    } else {
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+    }
+}
+
+function startPlayerUpdates() {
+    if (playerUpdateInterval) {
+        clearInterval(playerUpdateInterval);
+    }
+
+    updatePlayerWidget();
+    playerUpdateInterval = setInterval(updatePlayerWidget, 3000);
+}
+
+function initializePlayerWidget() {
+    document.getElementById('player-play-pause').addEventListener('click', togglePlayPause);
+    document.getElementById('player-add-to-rec').addEventListener('click', addCurrentTrackToRecommendations);
+    document.getElementById('player-play-playlist').addEventListener('click', playGeneratedPlaylist);
+
+    startPlayerUpdates();
 }
