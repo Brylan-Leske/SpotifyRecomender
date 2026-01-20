@@ -78,7 +78,7 @@ p {
     display: flex;
     justify-content: center;
     width: 100%;
-
+    align-items: center;
 }
 
 #credits-text {
@@ -87,6 +87,17 @@ p {
     text-decoration: none;
     font-weight: bolder;
     color: #ffffff;
+}
+
+#privacy-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bolder;
+    text-shadow: 1px 1px 3px #000000;
+}
+
+#privacy-link:hover {
+    text-decoration: underline;
 }
 
 h2 {
@@ -503,4 +514,97 @@ h3 {
     border-color: #17a84b;
     color: #ffffff;
     transform: scale(1.05);
+}
+
+/* Privacy Policy Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #282828;
+    margin: 20px;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.close-button {
+    color: #b3b3b3;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 35px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #1db954;
+}
+
+.modal-body {
+    margin-top: 20px;
+}
+
+.modal-body h3 {
+    color: #1db954;
+    text-align: left;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.modal-body ul {
+    color: #ffffff;
+    margin-left: 20px;
+    line-height: 1.6;
+}
+
+.modal-body li {
+    margin-bottom: 8px;
+}
+
+.modal-body p {
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.modal-body .text-left {
+    text-align: left;
+}
+
+/* Scrollbar styling for modal */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #404040;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #1db954;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #17a84b;
 }
