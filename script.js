@@ -4,7 +4,7 @@ const redirectUrl = 'https://brylan-leske.github.io/SpotifyRecomender/';        
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
 const tokenEndpoint = "https://accounts.spotify.com/api/token";
-const scope = 'user-read-private playlist-modify-public playlist-modify-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
+const scope = 'user-read-private playlist-modify-public playlist-modify-private'; // user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
 const recommendationParameters = {
     artists: [],
