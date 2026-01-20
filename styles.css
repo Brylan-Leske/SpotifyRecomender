@@ -78,7 +78,7 @@ p {
     display: flex;
     justify-content: center;
     width: 100%;
-
+    align-items: center;
 }
 
 #credits-text {
@@ -87,6 +87,17 @@ p {
     text-decoration: none;
     font-weight: bolder;
     color: #ffffff;
+}
+
+#privacy-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bolder;
+    text-shadow: 1px 1px 3px #000000;
+}
+
+#privacy-link:hover {
+    text-decoration: underline;
 }
 
 h2 {
@@ -573,6 +584,10 @@ h3 {
 .modal-body p {
     line-height: 1.6;
     margin-bottom: 10px;
+}
+
+.modal-body .text-left {
+    text-align: left;
 }
 
 /* Scrollbar styling for modal */

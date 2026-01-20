@@ -821,9 +821,9 @@ function closePrivacyModal() {
 }
 
 // Close modal when clicking outside of it
-window.onclick = function(event) {
+window.addEventListener('click', function(event) {
     const modal = document.getElementById('privacy-modal');
     if (event.target === modal) {
         closePrivacyModal();
     }
-}
+});
