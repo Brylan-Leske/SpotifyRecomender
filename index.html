@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
         rel="stylesheet">
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="f83caf51-4d2c-4a46-8597-2dd5f3e95cfa"></script>
 </head>
 
 <body>
@@ -143,6 +144,46 @@
             rel="noopener noreferrer">Spotify
             Recommender created by Brylan
             Leske</a>
+        <span style="margin: 0 10px; color: #ffffff;">|</span>
+        <a id="privacy-link" href="#" onclick="openPrivacyModal(); return false;" style="color: #ffffff; text-decoration: none; font-weight: bolder; text-shadow: 1px 1px 3px #000000;">Privacy Policy</a>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="closePrivacyModal()">&times;</span>
+            <h2>Privacy Policy</h2>
+            <div class="modal-body">
+                <h3>Data We Collect</h3>
+                <p style="text-align: left;">This application stores the following data locally in your browser:</p>
+                <ul style="text-align: left;">
+                    <li><strong>Spotify Authentication Tokens:</strong> Access and refresh tokens for your Spotify account, stored locally to maintain your session.</li>
+                    <li><strong>Token Expiration Data:</strong> Information about when your session expires.</li>
+                    <li><strong>OAuth Verification Data:</strong> Temporary codes used during the Spotify login process.</li>
+                </ul>
+                
+                <h3>Analytics</h3>
+                <p style="text-align: left;">We use Umami Analytics (cloud-hosted) to understand how visitors use this site. Umami is a privacy-focused analytics solution that:</p>
+                <ul style="text-align: left;">
+                    <li><strong>Does NOT use cookies:</strong> No files are stored on your device by Umami.</li>
+                    <li><strong>Anonymizes IP addresses:</strong> Your IP address is immediately hashed and never stored in its original form.</li>
+                    <li><strong>Does NOT track individuals:</strong> Only tracks aggregate page views and clicks, not "who" is visiting.</li>
+                    <li><strong>Does NOT fingerprint:</strong> No techniques are used to identify your specific device.</li>
+                    <li><strong>Collects minimal data:</strong> Only basic page view information and interactions.</li>
+                </ul>
+                
+                <h3>Third-Party Services</h3>
+                <p style="text-align: left;">This application integrates with Spotify to provide music recommendations. When you log in with Spotify, you authorize this app to access your Spotify account according to Spotify's terms of service and privacy policy.</p>
+                
+                <h3>Data Storage</h3>
+                <p style="text-align: left;">All authentication data is stored locally in your browser's localStorage. This data never leaves your device except when communicating directly with Spotify's servers to provide the service.</p>
+                
+                <h3>Your Rights</h3>
+                <p style="text-align: left;">You can clear all locally stored data at any time by logging out or clearing your browser's localStorage. No account or personal data is stored on our servers.</p>
+                
+                <p style="text-align: left; margin-top: 20px;"><em>Last updated: January 2026</em></p>
+            </div>
+        </div>
     </div>
 
     <!-- Floating Spotify Player Widget -->

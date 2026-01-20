@@ -810,3 +810,20 @@ function initializePlayerWidget() {
 
     startPlayerUpdates();
 }
+
+// Privacy Modal Functions
+function openPrivacyModal() {
+    document.getElementById('privacy-modal').style.display = 'flex';
+}
+
+function closePrivacyModal() {
+    document.getElementById('privacy-modal').style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('privacy-modal');
+    if (event.target === modal) {
+        closePrivacyModal();
+    }
+}
