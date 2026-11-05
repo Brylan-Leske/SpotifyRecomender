@@ -516,6 +516,15 @@ h3 {
     transform: scale(1.05);
 }
 
+@media (max-width: 480px) {
+    #spotify-player-widget {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+    }
+}
+
 /* Privacy Policy Modal */
 .modal {
     display: none;

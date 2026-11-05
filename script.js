@@ -1,10 +1,10 @@
 //28 (include version 28 in commit)
 const clientId = 'ae92d6a5af594310b5a621552b4410ce'; // your clientId
-const redirectUrl = 'https://brylan-leske.github.io/SpotifyRecomender/';        // your redirect URL - must be localhost URL and/or HTTPS
+const redirectUrl = window.location.origin + window.location.pathname;
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
 const tokenEndpoint = "https://accounts.spotify.com/api/token";
-const scope = 'user-read-private playlist-modify-public playlist-modify-private'; // user-read-playback-state user-modify-playback-state user-read-currently-playing';
+const scope = 'user-read-private playlist-modify-public playlist-modify-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
 const recommendationParameters = {
     artists: [],
@@ -19,7 +19,7 @@ var gottenUserData = {};
 const currentToken = {
     get access_token() { return localStorage.getItem('access_token') || null; },
     get refresh_token() { return localStorage.getItem('refresh_token') || null; },
-    get expires_in() { return localStorage.getItem('refresh_in') || null },
+    get expires_in() { return localStorage.getItem('expires_in') || null },
     get expires() { return localStorage.getItem('expires') || null },
 
     save: function (response) {
@@ -40,8 +40,14 @@ const code = args.get('code');
 
 async function initialize() {
     if (code) {
-        const token = await getToken(code);
-        currentToken.save(token);
+        try {
+            const token = await getToken(code);
+            currentToken.save(token);
+        } catch (error) {
+            console.error('Spotify authorization failed:', error);
+            alert('Spotify authorization failed. Please try logging in again.');
+            localStorage.clear();
+        }
 
         const url = new URL(window.location.href);
         url.searchParams.delete("code");
@@ -63,10 +69,10 @@ async function initialize() {
         // renderTemplate("oauth", "oauth-template", currentToken);
 
         const profileImage = document.getElementById("profile-picture");
-        profileImage.src = userData.images[1].url
+        profileImage.src = userData.images?.[1]?.url || userData.images?.[0]?.url || 'Portrait_Placeholder.png';
 
         const profileName = document.getElementById("profile-name");
-        profileName.innerHTML = userData.display_name;
+        profileName.textContent = userData.display_name || 'Spotify user';
 
         const topbar = document.getElementById("topbar");
         topbar.style.display = "flex";
@@ -190,7 +196,12 @@ async function getToken(code) {
         }),
     });
 
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok || !data.access_token) {
+        throw new Error(data.error_description || 'Unable to exchange Spotify authorization code');
+    }
+
+    return data;
 }
 
 async function refreshToken() {
@@ -206,16 +217,43 @@ async function refreshToken() {
         }),
     });
 
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok || !data.access_token) {
+        throw new Error(data.error_description || 'Unable to refresh Spotify access token');
+    }
+
+    return data;
+}
+
+async function spotifyFetch(url, options = {}) {
+    const request = async () => fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': 'Bearer ' + currentToken.access_token,
+        },
+    });
+
+    let response = await request();
+    if (response.status === 401 && currentToken.refresh_token) {
+        const token = await refreshToken();
+        currentToken.save(token);
+        response = await request();
+    }
+
+    return response;
 }
 
 async function getUserData() {
-    const response = await fetch("https://api.spotify.com/v1/me", {
+    const response = await spotifyFetch("https://api.spotify.com/v1/me", {
         method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
     });
 
-    return await response.json();
+    if (!response.ok) {
+        throw new Error('Unable to load Spotify profile');
+    }
+
+    return response.json();
 }
 
 async function processRecommendations(parameters) {
@@ -541,7 +579,7 @@ async function addSelectedItem(type, itemId, itemName, event) {
     recommendationParameters[type].push(itemId);
 
     // Add item name as a tag
-    addTagToContainer(type, itemName);
+    addTagToContainer(type, itemName, itemId);
 
     // Clear the search bar text
     document.getElementById(`${type}-input`).value = '';
@@ -615,9 +653,10 @@ async function searchItems(type) {
     }
 }
 
-function addTagToContainer(type, itemName) {
+function addTagToContainer(type, itemName, itemId) {
     const container = document.getElementById(`${type}-input-container`);
     const newTag = document.createElement('li');
+    newTag.dataset.id = itemId;
     newTag.innerHTML = itemName;
     // Add click event listener to remove the tag when clicked
     newTag.addEventListener('click', function () {
@@ -646,16 +685,19 @@ function toggleAdvancedOptionsDiv() {
 // Spotify Player Widget Functions
 async function getCurrentPlayback() {
     try {
-        const response = await fetch("https://api.spotify.com/v1/me/player", {
+        const response = await spotifyFetch("https://api.spotify.com/v1/me/player", {
             method: 'GET',
-            headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
         });
 
         if (response.status === 204 || response.status === 404) {
             return null; // No active playback
         }
 
-        return await response.json();
+        if (!response.ok) {
+            throw new Error(`Spotify playback request failed (${response.status})`);
+        }
+
+        return response.json();
     } catch (error) {
         console.error('Error fetching playback state:', error);
         return null;
@@ -675,10 +717,13 @@ async function togglePlayPause() {
             ? "https://api.spotify.com/v1/me/player/pause"
             : "https://api.spotify.com/v1/me/player/play";
 
-        await fetch(endpoint, {
+        const response = await spotifyFetch(endpoint, {
             method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + currentToken.access_token },
         });
+
+        if (!response.ok && response.status !== 204) {
+            throw new Error(`Spotify playback request failed (${response.status})`);
+        }
 
         // Update UI immediately
         setTimeout(() => updatePlayerWidget(), 500);
@@ -707,7 +752,7 @@ async function addCurrentTrackToRecommendations() {
 
     // Add to recommendations
     recommendationParameters.tracks.push(trackId);
-    addTagToContainer('tracks', trackName);
+    addTagToContainer('tracks', trackName, trackId);
 
     alert('Added "' + track.name + '" to recommendations!');
 }
@@ -721,10 +766,9 @@ async function playGeneratedPlaylist() {
     try {
         const uris = recentlyRecommended.tracks.map(track => track.uri);
 
-        const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+        const response = await spotifyFetch("https://api.spotify.com/v1/me/player/play", {
             method: 'PUT',
             headers: {
-                'Authorization': 'Bearer ' + currentToken.access_token,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -804,9 +848,13 @@ function startPlayerUpdates() {
 }
 
 function initializePlayerWidget() {
-    document.getElementById('player-play-pause').addEventListener('click', togglePlayPause);
-    document.getElementById('player-add-to-rec').addEventListener('click', addCurrentTrackToRecommendations);
-    document.getElementById('player-play-playlist').addEventListener('click', playGeneratedPlaylist);
+    const playPauseButton = document.getElementById('player-play-pause');
+    const addToRecommendationsButton = document.getElementById('player-add-to-rec');
+    const playPlaylistButton = document.getElementById('player-play-playlist');
+
+    playPauseButton.addEventListener('click', togglePlayPause);
+    addToRecommendationsButton.addEventListener('click', addCurrentTrackToRecommendations);
+    playPlaylistButton.addEventListener('click', playGeneratedPlaylist);
 
     startPlayerUpdates();
 }
